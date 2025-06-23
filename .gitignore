@@ -1,0 +1,37 @@
+# Python
+*.pyc
+*.pyo
+__pycache__/
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Distribución y metadatos del paquete
+*.egg-info/
+dist/
+build/
+
+# Archivos del editor (para IDEs como VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Archivos de configuración de editor
+*.swp
+*.swo
+
+# Archivos de configuración de IDEs
+*.iml
+
+# Archivos específicos de Docker
+docker-compose.yml
+Dockerfile
+
+# Archivos de entorno
+.env
+*.env
