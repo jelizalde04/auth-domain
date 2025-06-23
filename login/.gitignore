@@ -30,7 +30,7 @@ build/
 
 # Archivos específicos de Docker
 docker-compose.yml
-Dockerfile
+
 
 # Archivos de entorno
 .env
