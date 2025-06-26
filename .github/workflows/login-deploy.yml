@@ -82,10 +82,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Detener y eliminar el contenedor anterior, sin mostrar error si no existe
+            echo "Deteniendo contenedor anterior..."
             docker stop login 2>/dev/null || true
+            echo "Eliminando contenedor anterior..."
             docker rm login 2>/dev/null || true
+            echo "Descargando última imagen..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+            echo "Arrancando nuevo contenedor..."
             docker run -d --name login \
               -p 1001:1001 \
               -e DB_HOST=${{ secrets.DB_HOST }} \
@@ -99,3 +102,5 @@ jobs:
               -e DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               -e EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }} \
               ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+            echo "Logs del contenedor tras el arranque (si falla):"
+            docker logs login || true
