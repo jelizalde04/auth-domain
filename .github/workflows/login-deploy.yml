@@ -109,32 +109,28 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cat <<EOF > /home/ubuntu/.env
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USER=${{ secrets.DB_USER }}
-            DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}
-            EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            EOF
-
-            echo "Deteniendo y eliminando contenedor anterior si existe..."
+            # Elimina cualquier contenedor existente
             docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
 
-            echo "Descargando última imagen..."
+            # Descarga la última imagen
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
 
-            echo "Arrancando nuevo contenedor..."
+            # Arranca el contenedor con las variables de entorno pasadas una por una
             docker run -d \
               --name login \
               -p 1001:1001 \
-              --env-file /home/ubuntu/.env \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e DB_HOST="${{ secrets.DB_HOST }}" \
+              -e DB_NAME="${{ secrets.DB_NAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e DB_PORT="${{ secrets.DB_PORT }}" \
+              -e DB_USER="${{ secrets.DB_USER }}" \
+              -e DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}" \
+              -e DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}" \
+              -e EC2_AUTH_TEST="${{ secrets.EC2_AUTH_TEST }}" \
+              -e EC2_SSH_KEY="${{ secrets.EC2_SSH_KEY }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
 
-            echo "Logs del contenedor tras el arranque (si falla):"
+            # Muestra logs si falla
             docker logs login || true
