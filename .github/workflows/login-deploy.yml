@@ -97,7 +97,7 @@ jobs:
               -e DB_NAME=${{ secrets.DB_NAME }} \
               -e DB_PORT=${{ secrets.DB_PORT }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }} \
+              -e EC2_SSH_KEY="${{ secrets.EC2_SSH_KEY }}" \
               -e DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }} \
               -e DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} \
               -e EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }} \
