@@ -124,10 +124,9 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
-            echo "Deteniendo contenedor anterior..."
-            docker stop login 2>/dev/null || true
-            echo "Eliminando contenedor anterior..."
-            docker rm login 2>/dev/null || true
+            echo "Deteniendo y eliminando contenedor anterior si existe..."
+            docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
+
             echo "Descargando última imagen..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             echo "Arrancando nuevo contenedor..."
