@@ -97,13 +97,13 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
 
-  deploy_ec2_login:
+    deploy_ec2_login:
     needs: push_dockerhub_login
     runs-on: ubuntu-latest
     steps:
-            - name: Deploy to EC2 via SSH
-              uses: appleboy/ssh-action@v0.1.7
-    env:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
@@ -115,7 +115,7 @@ jobs:
           EC2_AUTH_TEST: ${{ secrets.EC2_AUTH_TEST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          with:
+        with:
           host: ${{ secrets.EC2_AUTH_TEST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -123,18 +123,18 @@ jobs:
           script: |
             echo "Generando archivo .env en EC2..."
             cat <<EOF > /home/ubuntu/.env
-            DATABASE_URL=$DATABASE_URL
-            DB_HOST=$DB_HOST
-            DB_NAME=$DB_NAME
-            DB_PASSWORD=$DB_PASSWORD
-            DB_PORT=$DB_PORT
-            DB_USER=$DB_USER
-            DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN
-            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
-            EC2_AUTH_TEST=$EC2_AUTH_TEST
-            EC2_SSH_KEY=$EC2_SSH_KEY
-            JWT_SECRET=$JWT_SECRET
-            EOF
+DATABASE_URL=$DATABASE_URL
+DB_HOST=$DB_HOST
+DB_NAME=$DB_NAME
+DB_PASSWORD=$DB_PASSWORD
+DB_PORT=$DB_PORT
+DB_USER=$DB_USER
+DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN
+DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+EC2_AUTH_TEST=$EC2_AUTH_TEST
+EC2_SSH_KEY=$EC2_SSH_KEY
+JWT_SECRET=$JWT_SECRET
+EOF
 
             echo "Deteniendo y eliminando contenedor anterior si existe..."
             docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
