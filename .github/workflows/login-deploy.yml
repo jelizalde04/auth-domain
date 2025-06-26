@@ -27,20 +27,30 @@ jobs:
       - name: Crear archivo .env con secrets de GitHub
         run: |
           cd login
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> .env
+          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+          echo "EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}" >> .env
+          echo "EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
 
       - name: Run static tests
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          EC2_AUTH_TEST: ${{ secrets.EC2_AUTH_TEST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           cd login
@@ -49,7 +59,8 @@ jobs:
       - name: Build Docker image (con .env embebido)
         run: |
           cd login
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
+          cp .env .env.prod
+          docker build --build-arg ENV_FILE=.env.prod -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
 
   push_dockerhub_login:
     needs: build_docker_login
@@ -58,13 +69,29 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Crear archivo .env con secrets de GitHub
+        run: |
+          cd login
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> .env
+          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+          echo "EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}" >> .env
+          echo "EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build Docker image (con .env embebido)
         run: |
           cd login
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
+          cp .env .env.prod
+          docker build --build-arg ENV_FILE=.env.prod -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
 
       - name: Push Docker image
         run: |
@@ -89,6 +116,10 @@ jobs:
             echo "Descargando última imagen..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             echo "Arrancando nuevo contenedor..."
-            docker run -d --name login -p 1001:1001 ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+            docker run -d \
+              --name login \
+              -p 1001:1001 \
+              --env-file /home/ubuntu/.env \
+              ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             echo "Logs del contenedor tras el arranque (si falla):"
             docker logs login || true
