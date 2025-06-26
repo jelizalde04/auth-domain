@@ -82,11 +82,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Cambia estas dos líneas por las siguientes para evitar el error:
-            # docker stop login || true
-            # docker rm login || true
-            docker stop login || true
-            docker rm login || true
+            # Detener y eliminar el contenedor anterior, sin mostrar error si no existe
+            docker stop login 2>/dev/null || true
+            docker rm login 2>/dev/null || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             docker run -d --name login \
               -p 1001:1001 \
