@@ -85,12 +85,8 @@ jobs:
             # Cambia estas dos líneas por las siguientes para evitar el error:
             # docker stop login || true
             # docker rm login || true
-            if [ "$(docker ps -aq -f name=login)" ]; then
-              docker stop login
-              docker rm login
-            else
-              echo "El contenedor login no existe, se omite la eliminación."
-            fi
+            docker stop login || true
+            docker rm login || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             docker run -d --name login \
               -p 1001:1001 \
