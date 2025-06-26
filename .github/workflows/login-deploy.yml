@@ -101,9 +101,21 @@ jobs:
     needs: push_dockerhub_login
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
+            - name: Deploy to EC2 via SSH
+              uses: appleboy/ssh-action@v0.1.7
+    env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          EC2_AUTH_TEST: ${{ secrets.EC2_AUTH_TEST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          with:
           host: ${{ secrets.EC2_AUTH_TEST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -111,29 +123,30 @@ jobs:
           script: |
             echo "Generando archivo .env en EC2..."
             cat <<EOF > /home/ubuntu/.env
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USER=${{ secrets.DB_USER }}
-            DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}
-            EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            DATABASE_URL=$DATABASE_URL
+            DB_HOST=$DB_HOST
+            DB_NAME=$DB_NAME
+            DB_PASSWORD=$DB_PASSWORD
+            DB_PORT=$DB_PORT
+            DB_USER=$DB_USER
+            DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN
+            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            EC2_AUTH_TEST=$EC2_AUTH_TEST
+            EC2_SSH_KEY=$EC2_SSH_KEY
+            JWT_SECRET=$JWT_SECRET
             EOF
 
             echo "Deteniendo y eliminando contenedor anterior si existe..."
             docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
 
             echo "Descargando última imagen..."
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+            docker pull $DOCKERHUB_USERNAME/login:latest
+
             echo "Arrancando nuevo contenedor..."
             docker run -d \
               --name login \
               -p 1001:1001 \
               --env-file /home/ubuntu/.env \
-              ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+              $DOCKERHUB_USERNAME/login:latest
             echo "Logs del contenedor tras el arranque (si falla):"
             docker logs login || true
