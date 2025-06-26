@@ -24,21 +24,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Crear archivo .env con secrets de GitHub
-        run: |
-          cd login
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> .env
-          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-          echo "EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}" >> .env
-          echo "EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-
       - name: Run static tests
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -47,20 +32,15 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_USER: ${{ secrets.DB_USER }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          EC2_AUTH_TEST: ${{ secrets.EC2_AUTH_TEST }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           cd login
           pytest tests/test_connections.py
 
-      - name: Build Docker image (con .env embebido)
+      - name: Build Docker image
         run: |
           cd login
-          cp .env .env.prod
-          docker build --build-arg ENV_FILE=.env.prod -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
 
   push_dockerhub_login:
     needs: build_docker_login
@@ -69,29 +49,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Crear archivo .env con secrets de GitHub
-        run: |
-          cd login
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> .env
-          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-          echo "EC2_AUTH_TEST=${{ secrets.EC2_AUTH_TEST }}" >> .env
-          echo "EC2_SSH_KEY=${{ secrets.EC2_SSH_KEY }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Build Docker image (con .env embebido)
+      - name: Build Docker image
         run: |
           cd login
-          cp .env .env.prod
-          docker build --build-arg ENV_FILE=.env.prod -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/login:latest .
 
       - name: Push Docker image
         run: |
@@ -109,6 +73,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            echo "Creando nuevo archivo .env en EC2..."
+            cat <<EOF > /home/ubuntu/.env
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_USER=${{ secrets.DB_USER }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
             echo "Deteniendo contenedor anterior..."
             docker stop login 2>/dev/null || true
             echo "Eliminando contenedor anterior..."
