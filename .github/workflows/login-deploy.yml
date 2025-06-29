@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - test
+      - main
 
 jobs:
   build_docker_login:
@@ -97,11 +98,12 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
 
-  deploy_ec2_login:
+  deploy_login_qa:
     needs: push_dockerhub_login
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/test'
     steps:
-      - name: Deploy to EC2 via SSH
+      - name: Deploy to EC2 QA via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_AUTH_TEST }}
@@ -109,13 +111,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Elimina cualquier contenedor existente
             docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
-
-            # Descarga la última imagen
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
-
-            # Arranca el contenedor con las variables de entorno pasadas una por una
             docker run -d \
               --name login \
               -p 1001:1001 \
@@ -131,6 +129,37 @@ jobs:
               -e EC2_SSH_KEY="${{ secrets.EC2_SSH_KEY }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
+            docker logs login || true
 
-            # Muestra logs si falla
+  deploy_login_prod:
+    needs: push_dockerhub_login
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to EC2 PROD via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_AUTH_PROD }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_PROD }}
+          port: 22
+          script: |
+            docker ps -a --format '{{.Names}}' | grep -Eq "^login$" && docker stop login && docker rm login
+            echo "${{ secrets.DOCKERHUB_TOKEN_PROD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME_PROD }}" --password-stdin
+            docker pull ${{ secrets.DOCKERHUB_USERNAME_PROD }}/login:latest
+            docker run -d \
+              --name login \
+              -p 1001:1001 \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL_PROD }}" \
+              -e DB_HOST="${{ secrets.DB_HOST_PROD }}" \
+              -e DB_NAME="${{ secrets.DB_NAME_PROD }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD_PROD }}" \
+              -e DB_PORT="${{ secrets.DB_PORT_PROD }}" \
+              -e DB_USER="${{ secrets.DB_USER_PROD }}" \
+              -e DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN_PROD }}" \
+              -e DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME_PROD }}" \
+              -e EC2_AUTH_PROD="${{ secrets.EC2_AUTH_PROD }}" \
+              -e EC2_SSH_KEY="${{ secrets.EC2_SSH_KEY_PROD }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET_PROD }}" \
+              ${{ secrets.DOCKERHUB_USERNAME_PROD }}/login:latest
             docker logs login || true
