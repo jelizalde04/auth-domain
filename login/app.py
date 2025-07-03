@@ -50,6 +50,10 @@ Base.metadata.create_all(bind=engine)
 # Include the authentication routes
 app.include_router(auth_router, prefix="/auth")
 
+@app.get("/health", tags=["Health Check"])
+def simple_health_check():
+    return {"status": "ok"}
+
 # Configure server execution with Uvicorn
 if __name__ == "__main__":
     import uvicorn
