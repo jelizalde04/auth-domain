@@ -15,4 +15,4 @@ def login_controller(login_req):
     token = create_access_token({"userId": str(responsible.id)}) 
     
    
-    return {"token": token, "responsibleId": str(responsible.id)}
+    return {"token": token}
