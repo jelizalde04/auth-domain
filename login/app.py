@@ -1,15 +1,16 @@
-import os 
+import os
+import logging
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from config.db import Base, engine
 from routes.authRoutes import router as auth_router
-import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 from sqlalchemy.exc import OperationalError
 
 # Configure logging to display in the console
-logging.basicConfig(level=logging.DEBUG)  # DEBUG logging level to get more details
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
@@ -26,7 +27,7 @@ DB_NAME = os.getenv("DB_NAME")
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Create the engine with the connection URL
-engine = create_engine(DATABASE_URL, echo=True)  # echo=True to enable SQL query logging
+engine = create_engine(DATABASE_URL, echo=True)
 
 # Create the database session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -43,6 +44,15 @@ except OperationalError as e:
 
 # Create the FastAPI app
 app = FastAPI(docs_url="/api-docs-login")
+
+# Add CORS middleware for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],           # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],           # Allow all headers
+)
 
 # Create the tables if they do not exist
 Base.metadata.create_all(bind=engine)
