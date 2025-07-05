@@ -122,6 +122,8 @@ jobs:
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             docker logs login || true
+            docker image prune -f
+            docker images ${{ secrets.DOCKERHUB_USERNAME }}/login --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | tail -n +2 | head -n -1 | awk '{print $3}' | xargs -r docker rmi || true
 
   deploy_login_prod:
     needs: push_dockerhub_login
@@ -153,3 +155,5 @@ jobs:
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/login:latest
             docker logs login || true
+            docker image prune -f
+            docker images ${{ secrets.DOCKERHUB_USERNAME }}/login --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | tail -n +2 | head -n -1 | awk '{print $3}' | xargs -r docker rmi || true
