@@ -2,7 +2,7 @@
 
 The auth-domain manages user authentication within a distributed system. Its purpose is to provide secure access to resources using JWT (JSON Web Tokens). This domain handles the login process, token generation, and user credential validation.
 
-## Microservices Involved
+## Microservices Involved    
 
 **Login:** This microservice allows users to log in with their credentials (email and password). Upon successful login, it generates a JWT that the user can use to authenticate future requests.
 
