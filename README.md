@@ -1,4 +1,4 @@
-# 1. General Domain Overview  
+# 1. General Domain Overview      
 
 The auth-domain manages user authentication within a distributed system. Its purpose is to provide secure access to resources using JWT (JSON Web Tokens). This domain handles the login process, token generation, and user credential validation.
 
