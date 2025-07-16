@@ -46,6 +46,7 @@ except OperationalError as e:
 app = FastAPI(docs_url="/api-docs-login")
 
 origins = [
+    "http://localhost:3000",
     "http://52.54.150.93:3000",
     "http://qa11_johana_elizalde:3000",
     "http://13.223.40.82:3000",
