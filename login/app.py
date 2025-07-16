@@ -45,13 +45,20 @@ except OperationalError as e:
 # Create the FastAPI app
 app = FastAPI(docs_url="/api-docs-login")
 
-# Add CORS middleware for all origins
+origins = [
+    "http://localhost:3000",
+    "http://52.54.150.93:3000",
+    "http://qa11_johana_elizalde:3000",
+    "http://13.223.40.82:3000",
+    "http:/prod11_johana_elizalde:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],            # Allow all origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],           # Allow all methods (GET, POST, etc.)
-    allow_headers=["*"],           # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Create the tables if they do not exist
