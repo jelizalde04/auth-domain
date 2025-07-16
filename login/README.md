@@ -1,5 +1,5 @@
 # Login Microservice
-
+  
 ## 1. Microservice Overview
 
 The login microservice allows users to authenticate into the system and obtain a JWT token for future requests. This microservice ensures that only authenticated users can access protected resources.
